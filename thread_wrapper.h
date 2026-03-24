@@ -1,0 +1,96 @@
+#pragma once
+
+#include <atomic>
+#include <cstddef>
+#include <thread>
+#include <unordered_map>
+#include <mutex>
+
+#include "msg_queue.h"
+#include "notify.h"
+#include "util.h"
+#include "util_common.h"
+
+BEGIN_UTIL_NAMESPACE
+
+class ThreadTimer;
+class TimerDriver;
+class ThreadMgr;
+class ThreadWrapper;
+
+/**
+ * Channel - 两个线程之间的通信通道（双向 SPSC 无锁）
+ */
+struct Channel
+{
+    SPSCQueue<MsgPtr>* writeQueue;  // 我写，对方读
+    SPSCQueue<MsgPtr>* readQueue;   // 对方写，我读
+
+    Channel() : writeQueue(nullptr), readQueue(nullptr) {}
+};
+
+/**
+ * ThreadWrapper - 线程包装器（类似 tp_util 的 thread_wrapper_t）
+ */
+class ThreadWrapper
+{
+public:
+    ThreadWrapper(ThreadMgr* threadMgr, thread_type type = IO_THREAD);
+    ~ThreadWrapper();
+
+    // 单次执行（主线程调用）
+    void run_once();
+
+    // 发送消息到目标线程（通过 SPSC 通道，无锁）
+    bool post_msg(ThreadWrapper* target, msg* data);
+
+    // 发送消息（兼容旧接口，使用控制队列）
+    void post_msg(msg* data);
+
+    // 创建与目标线程的通道
+    void create_channel(ThreadWrapper* peer, size_t capacity = 1024);
+
+    // 获取定时器
+    ThreadTimer* get_timer() { return m_timer; }
+
+    // 注册到 TimerDriver
+    void register_to_driver();
+
+    // 停止线程
+    void stop();
+
+    // 获取 Tick 计数器
+    TickCounter* get_tick_counter() { return &m_tickCounter; }
+
+    // 唤醒线程
+    void wakeup();
+
+    // 线程局部存储
+    static ThreadWrapper* current() { return t_current; }
+    static void set_current(ThreadWrapper* wrapper) { t_current = wrapper; }
+
+private:
+    void process_messages(bool autoTick = true);
+    void thread_func();
+
+private:
+    std::thread* m_thread;
+    std::atomic<bool> m_running{true};
+    ThreadMgr* m_threadMgr;
+    thread_type m_type;
+
+    // 与其他线程的通道（peer -> Channel）
+    std::unordered_map<ThreadWrapper*, Channel> m_channels;
+    std::mutex m_channelMutex;  // 保护 m_channels 的创建和销毁
+
+    // 控制消息队列（用于没有专用通道的情况）
+    MsgQueue m_ctrlQueue;
+
+    TickCounter m_tickCounter;
+    ThreadTimer* m_timer;
+    notify m_notify;
+
+    static thread_local ThreadWrapper* t_current;
+};
+
+END_UTIL_NAMESPACE
