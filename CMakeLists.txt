@@ -12,6 +12,7 @@ project(TimeWheel)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(EXE_TARGET_NAME time-wheel)
 
 # CMake 3.1.0+ required.
 # See: https://stackoverflow.com/a/29871891
@@ -22,12 +23,12 @@ include_directories(${PROJECT_SOURCE_DIR} ./spdlog/include)
 
 file(GLOB SRCS *.cpp *.h)
 
-set(EXE_TARGET_NAME time-wheel)
 
 set(LIBS
-    ${CMAKE_THREAD_LIBS_INIT}
+${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_executable(${EXE_TARGET_NAME} ${SRCS})
+target_include_directories(${EXE_TARGET_NAME} PRIVATE ./include)
 target_link_libraries(${EXE_TARGET_NAME} ${LIBS})
 

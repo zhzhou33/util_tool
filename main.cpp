@@ -17,7 +17,7 @@ void handle_user_event()
     test->func();
 }
 
-class customer_msg : public msg
+class customer_msg : public ut_msg
 {
 public:
     virtual void on_message()
@@ -38,16 +38,12 @@ int main()
 
     // 1. 获取线程管理器和驱动
     ThreadMgr* mgr = ThreadMgr::get_instance();
-    TimerDriver* driver = mgr->get_driver();
 
     // 2. 获取主线程
-    ThreadWrapper* main_thr = mgr->get_main_thread();
+    IThreadWrapper* main_thr = mgr->get_main_thread();
 
     // 3. 创建 IO 线程
-    ThreadWrapper* io_thr = mgr->create_thread(IO_THREAD);
-
-    // // 4. 创建通道（双向 SPSC 无锁通信）
-    // main_thr->create_channel(io_thr);
+    IThreadWrapper* io_thr = mgr->create_thread(IO_THREAD);
 
     std::cout << "main thread id=" << std::this_thread::get_id() << std::endl;
 
@@ -63,10 +59,10 @@ int main()
     while (true)
     {
         // 驱动所有时间轮
-        driver->run_once();
+        // driver->run_once();
 
         // 处理主线程消息
-        main_thr->run_once();
+        main_thr->thread_run();
     }
 
     return 0;

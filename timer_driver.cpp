@@ -34,32 +34,19 @@ void TimerDriver::run_once()
 
     m_preTime = next_time;
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (int i = 1; i < m_wrappers.size(); i++)
+    
+    std::lock_guard<std::mutex> lock(ThreadWrapper::s_thrMutex);
+    for (int i = 1; i < (*m_thrs).size(); i++)
     {
-        m_wrappers[i]->get_tick_counter()->add(1);
-        m_wrappers[i]->wakeup();
+        (*m_thrs)[i]->get_tick_counter()->add(1);
+        (*m_thrs)[i]->wakeup();
     }
 }
 
-void TimerDriver::register_wrapper(ThreadWrapper *wrapper)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    auto it = std::find(m_wrappers.begin(), m_wrappers.end(),
-                        wrapper);
-    if (it == m_wrappers.end())
-    {
-        m_wrappers.push_back(wrapper);
-    }
-}
+// void TimerDriver::register_wrapper(ThreadWrapper *wrapper)
+// {
+// }
 
-void TimerDriver::unregister_wrapper(ThreadWrapper *wrapper)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    auto it = std::find(m_wrappers.begin(), m_wrappers.end(),
-                        wrapper);
-    if (it != m_wrappers.end())
-    {
-        m_wrappers.erase(it);
-    }
-}
+// void TimerDriver::unregister_wrapper(ThreadWrapper *wrapper)
+// {
+// }

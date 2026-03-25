@@ -11,7 +11,6 @@
 BEGIN_UTIL_NAMESPACE
 USING_UTIL_NAMESPACE
 
-
 class ThreadWrapper;
 
 /*
@@ -25,7 +24,7 @@ TimerDriver - 定时器驱动（主线程模式）
 class TimerDriver
 {
 public:
-    static TimerDriver* get_instance()
+    static TimerDriver *get_instance()
     {
         static TimerDriver instance;
         return &instance;
@@ -35,11 +34,13 @@ public:
     void run_once();
 
     // 注册ThreadWrapper
-    void register_wrapper(ThreadWrapper* threadWrapper);
+    // void register_wrapper(ThreadWrapper *threadWrapper);
 
-    void unregister_wrapper(ThreadWrapper* threadWrapper);
+    // void unregister_wrapper(ThreadWrapper *threadWrapper);
 
     uint32_t get_step_ms() const { return m_steps; }
+
+    void set_thread_list(std::vector<ThreadWrapper *> *thrs) { m_thrs = thrs; }
 
 private:
     TimerDriver();
@@ -48,10 +49,9 @@ private:
 private:
     uint32_t m_steps;
     int64_t m_preTime;
-    std::mutex m_mutex;
-    std::vector<ThreadWrapper*> m_wrappers;
+    std::vector<ThreadWrapper *> *m_thrs;
 };
 
 END_UTIL_NAMESPACE
 
-#endif  // TIMER_DRIVER_H_
+#endif // TIMER_DRIVER_H_

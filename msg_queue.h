@@ -6,17 +6,9 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include "util.h"
 
-// 消息基类
-class msg_it
-{
-public:
-    msg_it() {}
-    virtual ~msg_it() {}
-    virtual void on_message() = 0;
-};
-
-using MsgPtr = std::shared_ptr<msg_it>;
+using MsgPtr = std::shared_ptr<util::ut_msg>;
 
 /**
  * SPSC 无锁环形队列（单生产者单消费者）
@@ -64,7 +56,7 @@ public:
             return false;  // 队列空
         }
 
-        item = _buffer[tail];
+        item = std::move(_buffer[tail]);
         _tail.store((tail + 1) % _capacity, std::memory_order_release);
         return true;
     }

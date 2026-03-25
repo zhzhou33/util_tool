@@ -10,7 +10,9 @@ USING_UTIL_NAMESPACE
 
 thread_local ThreadWrapper *ThreadWrapper::t_current = nullptr;
 
-ThreadWrapper::ThreadWrapper(ThreadMgr *threadMgr, thread_type type) :
+std::mutex ThreadWrapper::s_thrMutex;
+
+ThreadWrapper::ThreadWrapper(ThreadMgrImpl *threadMgr, thread_type type) :
     m_thread(nullptr),
     m_threadMgr(threadMgr),
     m_type(type),
@@ -29,14 +31,15 @@ ThreadWrapper::ThreadWrapper(ThreadMgr *threadMgr, thread_type type) :
         ThreadTimer::set_current(m_timer);
     }
     auto thrList = m_threadMgr->get_thread_list();
-    for(const auto& thr : *thrList)
+    std::lock_guard<std::mutex> lock(s_thrMutex);
+    for (const auto &thr : *thrList)
     {
         thr->create_channel(this);
     }
     thrList->push_back(this);
 
-    // 注册到 TimerDriver
-    this->register_to_driver();
+    // // 注册到 TimerDriver
+    // this->register_to_driver();
 }
 
 ThreadWrapper::~ThreadWrapper()
@@ -112,12 +115,6 @@ void ThreadWrapper::process_messages(bool autoTick)
             }
         }
     }
-
-    std::vector<MsgPtr> ctrlMsgs = m_ctrlQueue.pop_all();
-    for (auto &msg : ctrlMsgs)
-    {
-        msg->on_message();
-    }
 }
 
 void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
@@ -126,9 +123,6 @@ void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
     {
         return;
     }
-
-    std::lock_guard<std::mutex> lock(m_channelMutex);
-    std::lock_guard<std::mutex> peerLock(peer->m_channelMutex);
 
     if (m_channels.find(peer) != m_channels.end())
     {
@@ -147,55 +141,28 @@ void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
     peerChannel.readQueue = queue1;
 }
 
-bool ThreadWrapper::post_msg(ThreadWrapper *target, msg *data)
+bool ThreadWrapper::post_msg(ThreadWrapper *target, ut_msg *data)
 {
     if (target == nullptr || data == nullptr)
     {
         return false;
     }
 
-    class WrappingMsg : public msg_it
-    {
-    public:
-        explicit WrappingMsg(msg *raw) : m_raw(raw)
-        {
-        }
-
-        void on_message() override
-        {
-            if (m_raw != nullptr)
-            {
-                m_raw->on_message();
-                delete m_raw;
-            }
-        }
-
-    private:
-        msg *m_raw;
-    };
-
-    auto wrapper = std::make_shared<WrappingMsg>(data);
-
     auto it = m_channels.find(target);
-    if (it != m_channels.end() && it->second.writeQueue != nullptr)
+    if (it != m_channels.end() && it->second.writeQueue != nullptr && target)
     {
-        bool ok = it->second.writeQueue->push(wrapper);
+        Channel ch = it->second;
+        bool ok = it->second.writeQueue->push(std::shared_ptr<ut_msg>(data));
         if (ok)
         {
             target->wakeup();
         }
         return ok;
     }
-
-    bool ok = target->m_ctrlQueue.push(wrapper);
-    if (ok)
-    {
-        target->wakeup();
-    }
-    return ok;
+    return false;
 }
 
-void ThreadWrapper::post_msg(msg *data)
+void ThreadWrapper::post_msg(ut_msg *data)
 {
     ThreadWrapper *sender = ThreadWrapper::current();
     if (sender != nullptr && sender != this)
@@ -203,30 +170,6 @@ void ThreadWrapper::post_msg(msg *data)
         sender->post_msg(this, data);
         return;
     }
-
-    class WrappingMsg : public msg_it
-    {
-    public:
-        explicit WrappingMsg(msg *raw) : m_raw(raw)
-        {
-        }
-
-        void on_message() override
-        {
-            if (m_raw != nullptr)
-            {
-                m_raw->on_message();
-                delete m_raw;
-            }
-        }
-
-    private:
-        msg *m_raw;
-    };
-
-    auto wrapper = std::make_shared<WrappingMsg>(data);
-    m_ctrlQueue.push(wrapper);
-    wakeup();
 }
 
 void ThreadWrapper::wakeup()
@@ -234,7 +177,13 @@ void ThreadWrapper::wakeup()
     m_notify.signal();
 }
 
-void ThreadWrapper::register_to_driver()
+// void ThreadWrapper::register_to_driver()
+// {
+//     m_threadMgr->get_driver()->register_wrapper(this);
+// }
+
+void ThreadWrapper::thread_run()
 {
-    m_threadMgr->get_driver()->register_wrapper(this);
+    m_threadMgr->get_driver()->run_once();
+    this->run_once();
 }

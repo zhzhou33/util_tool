@@ -3,6 +3,7 @@
 #include "util_common.h"
 #include <cstring>
 #include <unistd.h>
+#include <cstdint>
 
 USING_UTIL_NAMESPACE
 BEGIN_UTIL_NAMESPACE
