@@ -28,6 +28,15 @@ ThreadWrapper::ThreadWrapper(ThreadMgr *threadMgr, thread_type type) :
         ThreadWrapper::set_current(this);
         ThreadTimer::set_current(m_timer);
     }
+    auto thrList = m_threadMgr->get_thread_list();
+    for(const auto& thr : *thrList)
+    {
+        thr->create_channel(this);
+    }
+    thrList->push_back(this);
+
+    // 注册到 TimerDriver
+    this->register_to_driver();
 }
 
 ThreadWrapper::~ThreadWrapper()

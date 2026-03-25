@@ -46,8 +46,8 @@ int main()
     // 3. 创建 IO 线程
     ThreadWrapper* io_thr = mgr->create_thread(IO_THREAD);
 
-    // 4. 创建通道（双向 SPSC 无锁通信）
-    main_thr->create_channel(io_thr);
+    // // 4. 创建通道（双向 SPSC 无锁通信）
+    // main_thr->create_channel(io_thr);
 
     std::cout << "main thread id=" << std::this_thread::get_id() << std::endl;
 

@@ -26,10 +26,10 @@ ThreadMgr::~ThreadMgr()
 ThreadWrapper* ThreadMgr::create_thread(thread_type type)
 {
     ThreadWrapper* wrapper = new ThreadWrapper(this, type);
-    m_threads.push_back(wrapper);
+    // m_threads.push_back(wrapper);
 
     // 注册到 TimerDriver
-    wrapper->register_to_driver();
+    // wrapper->register_to_driver();
 
     return wrapper;
 }

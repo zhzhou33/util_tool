@@ -24,6 +24,8 @@ public:
 
     TimerDriver* get_driver() { return m_driver; }
 
+    std::list<ThreadWrapper*>* get_thread_list() { return &m_threads; }
+
 private:
     ThreadMgr();
     ~ThreadMgr();
