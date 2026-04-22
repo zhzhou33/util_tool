@@ -11,9 +11,9 @@
 #include "timer.h"
 #include "util_common.h"
 
+USING_UTIL_NAMESPACE
 BEGIN_UTIL_NAMESPACE
 
-USING_UTIL_NAMESPACE
 
 class TimeWheel
 {

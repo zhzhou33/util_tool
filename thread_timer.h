@@ -7,13 +7,15 @@
 #include <vector>
 
 #include "time_wheel.h"
-#include "util_common.h"
+#include "util.h"
 
+
+USING_UTIL_NAMESPACE
 BEGIN_UTIL_NAMESPACE
 
 #define TIMESTEMPS 10
 
-class timer_it;
+class util_timer;
 
 class ThreadTimer
 {
@@ -23,7 +25,7 @@ public:
 
     void init();
 
-    uint32_t add_timer(uint32_t interval, uint32_t times, timer_it* who_is);
+    uint32_t add_timer(uint32_t interval, uint32_t times, util_timer* who_is);
     void remove_timer(uint32_t timer_id);
 
     void on_tick(uint32_t elapsed_ticks);

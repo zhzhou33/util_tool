@@ -3,14 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#define BEGIN_UTIL_NAMESPACE \
-    namespace util           \
-    {
-
-#define END_UTIL_NAMESPACE }
-
-#define USING_UTIL_NAMESPACE using namespace util;
+#include "util.h"
 
 BEGIN_UTIL_NAMESPACE
 
@@ -20,25 +13,6 @@ BEGIN_UTIL_NAMESPACE
     {                             \
         std::cout << x << std::endl; \
     } while (0)
-
-class NoCopy
-{
-public:
-    NoCopy() {}
-
-protected:
-    ~NoCopy() {}
-
-private:
-    NoCopy(const NoCopy&);
-    NoCopy& operator=(const NoCopy&);
-};
-
-enum thread_type
-{
-    MAIN_THREAD = 0,
-    IO_THREAD,
-};
 
 END_UTIL_NAMESPACE
 

@@ -17,7 +17,7 @@ void handle_user_event()
     test->func();
 }
 
-class customer_msg : public ut_msg
+class customer_msg : public util_msg
 {
 public:
     virtual void on_message()
@@ -58,9 +58,6 @@ int main()
     // 7. 主循环
     while (true)
     {
-        // 驱动所有时间轮
-        // driver->run_once();
-
         // 处理主线程消息
         main_thr->thread_run();
     }

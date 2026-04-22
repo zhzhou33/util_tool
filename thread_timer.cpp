@@ -1,7 +1,6 @@
 #include "thread_timer.h"
 #include "time_wheel.h"
 
-USING_UTIL_NAMESPACE
 
 // 线程局部存储
 thread_local ThreadTimer *ThreadTimer::t_current = nullptr;
@@ -59,7 +58,7 @@ TimeWheelPtr ThreadTimer::get_least_time_wheel()
 
 uint32_t ThreadTimer::add_timer(uint32_t interval,
                                 uint32_t times,
-                                timer_it *who_is)
+                                util_timer *who_is)
 {
     if (m_timeWheels.empty())
     {

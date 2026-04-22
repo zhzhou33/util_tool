@@ -8,8 +8,6 @@
 #include "thread_timer.h"
 #include "time_wheel.h"
 
-USING_UTIL_NAMESPACE
-
 TimerDriver::TimerDriver() : m_steps(TIMESTEMPS), m_preTime(0)
 {
 }
@@ -42,11 +40,3 @@ void TimerDriver::run_once()
         (*m_thrs)[i]->wakeup();
     }
 }
-
-// void TimerDriver::register_wrapper(ThreadWrapper *wrapper)
-// {
-// }
-
-// void TimerDriver::unregister_wrapper(ThreadWrapper *wrapper)
-// {
-// }

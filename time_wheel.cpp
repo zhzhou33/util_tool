@@ -2,7 +2,6 @@
 
 #include <utility>
 
-USING_UTIL_NAMESPACE
 
 TimeWheel::TimeWheel(uint32_t scales, uint32_t scale_unit_ms,
                      const std::string& name)
@@ -31,9 +30,11 @@ void TimeWheel::add_timer(TimerPtr timer)
     int64_t less_tv_time = 0;
     if (m_pLessLevelTW != nullptr)
     {
+        // Elapsed time inside the current slot of the smaller (less) wheel.
         less_tv_time = m_pLessLevelTW->get_current_time();
     }
 
+    // Align this wheel's slot calculation using the smaller wheel's offset.
     int64_t diff = timer->when_ms() + less_tv_time - get_now_time_stamp();
     if (diff >= m_scaleUnitMs)
     {

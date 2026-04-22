@@ -8,8 +8,9 @@
 
 #include "msg_queue.h"
 #include "notify.h"
-#include "util_common.h"
+#include "util.h"
 
+USING_UTIL_NAMESPACE
 BEGIN_UTIL_NAMESPACE
 
 class ThreadTimer;
@@ -41,21 +42,18 @@ public:
     void run_once();
 
     // 发送消息到目标线程（通过 SPSC 通道，无锁）
-    bool post_msg(ThreadWrapper *target, ut_msg *data);
+    bool post_msg(ThreadWrapper *target, util_msg *data);
 
     // 发送消息（兼容旧接口，使用控制队列）
-    void post_msg(ut_msg *data) override;
+    void post_msg(util_msg *data) override;
 
     void thread_run() override;
 
     // 创建与目标线程的通道
-    void create_channel(ThreadWrapper *peer, size_t capacity = 1024);
+    void create_channel(ThreadWrapper *peer, size_t capacity = 256);
 
     // 获取定时器
     ThreadTimer *get_timer() { return m_timer; }
-
-    // 注册到 TimerDriver
-    // void register_to_driver();
 
     // 停止线程
     void stop();

@@ -38,7 +38,7 @@ ThreadMgrImpl::ThreadMgrImpl()
 
 ThreadMgrImpl::~ThreadMgrImpl()
 {
-    for (auto *thr : m_threads)
+    for (auto thr : m_threads)
     {
         delete thr;
     }

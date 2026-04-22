@@ -8,8 +8,8 @@
 #include "util.h"
 #include "util_common.h"
 
-BEGIN_UTIL_NAMESPACE
 USING_UTIL_NAMESPACE
+BEGIN_UTIL_NAMESPACE
 
 class ThreadWrapper;
 
@@ -32,11 +32,6 @@ public:
 
     // 在当前线程执行一次驱动（主线程调用）
     void run_once();
-
-    // 注册ThreadWrapper
-    // void register_wrapper(ThreadWrapper *threadWrapper);
-
-    // void unregister_wrapper(ThreadWrapper *threadWrapper);
 
     uint32_t get_step_ms() const { return m_steps; }
 

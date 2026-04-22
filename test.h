@@ -1,7 +1,6 @@
 #pragma once
 
 #include "timer.h"
-#include "util_common.h"
 
 #include <chrono>
 #include <iomanip>
@@ -40,16 +39,16 @@ inline std::string stamp()
     return oss.str();
 }
 
-class Test : public timer_sink_it
+class Test : public util_timer_sink
 {
 public:
     Test() {}
     ~Test() {}
-    virtual void timer_work(const timer_it* who_is);
+    virtual void timer_work(const util_timer* who_is);
 
     void func();
 
 private:
-    timer_elem_t m_test_timer;
-    timer_elem_t m_test2_timer;
+    util_timer m_test_timer;
+    util_timer m_test2_timer;
 };

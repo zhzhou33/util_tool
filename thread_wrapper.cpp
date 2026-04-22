@@ -6,7 +6,6 @@
 #include "thread_timer.h"
 #include "timer_driver.h"
 
-USING_UTIL_NAMESPACE
 
 thread_local ThreadWrapper *ThreadWrapper::t_current = nullptr;
 
@@ -37,9 +36,6 @@ ThreadWrapper::ThreadWrapper(ThreadMgrImpl *threadMgr, thread_type type) :
         thr->create_channel(this);
     }
     thrList->push_back(this);
-
-    // // 注册到 TimerDriver
-    // this->register_to_driver();
 }
 
 ThreadWrapper::~ThreadWrapper()
@@ -141,7 +137,7 @@ void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
     peerChannel.readQueue = queue1;
 }
 
-bool ThreadWrapper::post_msg(ThreadWrapper *target, ut_msg *data)
+bool ThreadWrapper::post_msg(ThreadWrapper *target, util_msg *data)
 {
     if (target == nullptr || data == nullptr)
     {
@@ -152,7 +148,7 @@ bool ThreadWrapper::post_msg(ThreadWrapper *target, ut_msg *data)
     if (it != m_channels.end() && it->second.writeQueue != nullptr && target)
     {
         Channel ch = it->second;
-        bool ok = it->second.writeQueue->push(std::shared_ptr<ut_msg>(data));
+        bool ok = it->second.writeQueue->push(std::shared_ptr<util_msg>(data));
         if (ok)
         {
             target->wakeup();
@@ -162,7 +158,7 @@ bool ThreadWrapper::post_msg(ThreadWrapper *target, ut_msg *data)
     return false;
 }
 
-void ThreadWrapper::post_msg(ut_msg *data)
+void ThreadWrapper::post_msg(util_msg *data)
 {
     ThreadWrapper *sender = ThreadWrapper::current();
     if (sender != nullptr && sender != this)
