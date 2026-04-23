@@ -10,9 +10,32 @@
 
 TimerDriver::TimerDriver() : m_steps(TIMESTEMPS), m_preTime(0)
 {
+#ifdef _WIN32
+    // Windows: 提高系统时钟精度到 1ms
+    if (timeBeginPeriod(1) == TIMERR_NOERROR)
+    {
+        m_highResAvailable = true;
+        std::cout << "Timer precision increased to 1ms" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to increase timer precision" << std::endl;
+    }
+#else
+    m_highResAvailable = true; // Linux/Mac 天生高精度
+#endif
 }
 
 TimerDriver::~TimerDriver() = default;
+
+void TimerDriver::precise_sleep(int64_t ms)
+{
+#ifdef WIN32
+    m_timer.wait_for(ms);
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+#endif
+}
 
 void TimerDriver::run_once()
 {
@@ -27,12 +50,10 @@ void TimerDriver::run_once()
 
     if (sleep_time > 0)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        precise_sleep(sleep_time);
     }
-
-    m_preTime = next_time;
-
     
+    m_preTime = next_time;
     std::lock_guard<std::mutex> lock(ThreadWrapper::s_thrMutex);
     for (int i = 1; i < (*m_thrs).size(); i++)
     {

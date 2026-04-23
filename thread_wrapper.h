@@ -23,10 +23,10 @@ class ThreadWrapper;
  */
 struct Channel
 {
-    SPSCQueue<MsgPtr> *writeQueue; // 我写，对方读
-    SPSCQueue<MsgPtr> *readQueue;  // 对方写，我读
+    // MPSC<MsgPtr, MSG_QUEUE_SIZE> *writeQueue; // 我写，对方读,指向对方的读取队列
+    MPSC<MsgPtr, MSG_QUEUE_SIZE> *readQueue;  // 对方写，我读,只有一个队列
 
-    Channel() : writeQueue(nullptr), readQueue(nullptr) {}
+    Channel() : readQueue(nullptr) {}
 };
 
 /**
@@ -69,7 +69,7 @@ public:
     static void set_current(ThreadWrapper *wrapper) { t_current = wrapper; }
 
 private:
-    void process_messages(bool autoTick = true);
+    void process_messages(bool autoTick = false);
     void thread_func();
 
 private:
@@ -79,13 +79,15 @@ private:
     thread_type m_type;
 
     // 与其他线程的通道（peer -> Channel）
-    std::unordered_map<ThreadWrapper *, Channel> m_channels;
+    std::unordered_map<ThreadWrapper *, MPSC<MsgPtr, MSG_QUEUE_SIZE>*> m_channels;
+    MPSC<MsgPtr, MSG_QUEUE_SIZE>* m_readEventQueue;
 
     TickCounter m_tickCounter;
     ThreadTimer *m_timer;
     notify m_notify;
 
     static thread_local ThreadWrapper *t_current;
+
 public:
     static std::mutex s_thrMutex;
 };

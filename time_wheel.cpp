@@ -2,16 +2,8 @@
 
 #include <utility>
 
-
 TimeWheel::TimeWheel(uint32_t scales, uint32_t scale_unit_ms,
-                     const std::string& name)
-    : m_strName(name)
-    , m_curIndex(0)
-    , m_scales(scales)
-    , m_scaleUnitMs(scale_unit_ms)
-    , m_slots(scales)
-    , m_pLessLevelTW(nullptr)
-    , m_pGreaterLevelTW(nullptr)
+                     const std::string &name) : m_strName(name), m_curIndex(0), m_scales(scales), m_scaleUnitMs(scale_unit_ms), m_slots(scales), m_pLessLevelTW(nullptr), m_pGreaterLevelTW(nullptr)
 {
 }
 
@@ -66,7 +58,7 @@ void TimeWheel::increase()
         m_pGreaterLevelTW->increase();
         std::list<TimerPtr> slot =
             std::move(m_pGreaterLevelTW->get_and_clear_current_slot());
-        for (const TimerPtr& timer : slot)
+        for (const TimerPtr &timer : slot)
         {
             add_timer(timer);
         }

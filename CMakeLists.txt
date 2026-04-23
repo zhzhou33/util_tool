@@ -30,6 +30,7 @@ list(REMOVE_ITEM LIB_SRCS
 
 set(LIBS
 ${CMAKE_THREAD_LIBS_INIT}
+winmm
 )
 
 add_library(${LIB_TARGET_NAME} ${LIB_SRCS})

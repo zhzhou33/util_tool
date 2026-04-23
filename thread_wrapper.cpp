@@ -2,10 +2,11 @@
 
 #include <utility>
 
+#include "msg_queue.h"
 #include "thread_mgr.h"
 #include "thread_timer.h"
+#include "time_wheel.h"
 #include "timer_driver.h"
-
 
 thread_local ThreadWrapper *ThreadWrapper::t_current = nullptr;
 
@@ -29,11 +30,14 @@ ThreadWrapper::ThreadWrapper(ThreadMgrImpl *threadMgr, thread_type type) :
         ThreadWrapper::set_current(this);
         ThreadTimer::set_current(m_timer);
     }
+    // init read channel queue
+    m_readEventQueue = new MPSC<MsgPtr, MSG_QUEUE_SIZE>();
     auto thrList = m_threadMgr->get_thread_list();
     std::lock_guard<std::mutex> lock(s_thrMutex);
     for (const auto &thr : *thrList)
     {
-        thr->create_channel(this);
+        thr->m_channels[this] = m_readEventQueue;
+        this->m_channels[thr] = thr->m_readEventQueue;
     }
     thrList->push_back(this);
 }
@@ -51,10 +55,7 @@ ThreadWrapper::~ThreadWrapper()
         m_thread = nullptr;
     }
 
-    for (auto &pair : m_channels)
-    {
-        delete pair.second.writeQueue;
-    }
+    delete m_readEventQueue;
     m_channels.clear();
 
     delete m_timer;
@@ -99,17 +100,14 @@ void ThreadWrapper::process_messages(bool autoTick)
         m_timer->on_tick(m_tickCounter.consume());
     }
 
-    for (auto &pair : m_channels)
+    size_t events = m_readEventQueue->available();
+    if (events != 0)
+        std::cout << "handle evnets " << events << std::endl;
+    MsgPtr msg;
+    for (int i = 0; i < events; i++)
     {
-        Channel &ch = pair.second;
-        if (ch.readQueue)
-        {
-            MsgPtr msg;
-            while (ch.readQueue->pop(msg))
-            {
-                msg->on_message();
-            }
-        }
+        m_readEventQueue->pop(msg);
+        msg->on_message();
     }
 }
 
@@ -124,48 +122,42 @@ void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
     {
         return;
     }
-
-    auto *queue1 = new SPSCQueue<MsgPtr>(capacity); // this->peer
-    auto *queue2 = new SPSCQueue<MsgPtr>(capacity); // peer->this
-
-    Channel &myChannel = m_channels[peer];
-    myChannel.writeQueue = queue1;
-    myChannel.readQueue = queue2;
-
-    Channel &peerChannel = peer->m_channels[this];
-    peerChannel.writeQueue = queue2;
-    peerChannel.readQueue = queue1;
 }
 
 bool ThreadWrapper::post_msg(ThreadWrapper *target, util_msg *data)
 {
-    if (target == nullptr || data == nullptr)
-    {
-        return false;
-    }
+    // if (target == nullptr || data == nullptr)
+    // {
+    //     return false;
+    // }
 
-    auto it = m_channels.find(target);
-    if (it != m_channels.end() && it->second.writeQueue != nullptr && target)
-    {
-        Channel ch = it->second;
-        bool ok = it->second.writeQueue->push(std::shared_ptr<util_msg>(data));
-        if (ok)
-        {
-            target->wakeup();
-        }
-        return ok;
-    }
+    // auto it = m_channels.find(target);
+    // if (it != m_channels.end() && target->m_readEventQueue != nullptr)
+    // {
+    //     Channel ch = it->second;
+    //     bool ok = it->second.writeQueue->push(std::shared_ptr<util_msg>(data));
+    //     if (ok)
+    //     {
+    //         target->wakeup();
+    //     }
+    //     return ok;
+    // }
     return false;
 }
 
 void ThreadWrapper::post_msg(util_msg *data)
 {
-    ThreadWrapper *sender = ThreadWrapper::current();
-    if (sender != nullptr && sender != this)
+    if (this->m_readEventQueue->push(std::shared_ptr<util_msg>(data)))
     {
-        sender->post_msg(this, data);
-        return;
+        this->wakeup();
     }
+
+    // ThreadWrapper *sender = ThreadWrapper::current();
+    // if (sender != nullptr && sender != this)
+    // {
+    //     sender->post_msg(this, data);
+    //     return;
+    // }
 }
 
 void ThreadWrapper::wakeup()

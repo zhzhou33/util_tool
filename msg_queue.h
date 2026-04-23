@@ -12,6 +12,8 @@
 
 using MsgPtr = std::shared_ptr<util::util_msg>;
 
+#define MSG_QUEUE_SIZE 128
+
 /**
  * SPSC 无锁环形队列（单生产者单消费者）
  * - push: 无锁
@@ -98,35 +100,39 @@ private:
 template <typename T, size_t N>
 class MPSC
 {
-    static_assert((N & (N - 1)) == 0);
-    alignas(64) T slots_[N];
-    alignas(64) std::atomic<size_t> published_[N];
+    static_assert((N & (N - 1)) == 0, "N must be 2^n");
+    struct Slots
+    {
+        std::atomic<size_t> published_;
+        T slot_;
+    };
+    alignas(64) Slots slots_[N];
     alignas(64) std::atomic<size_t> head_{0};
     alignas(64) std::atomic<size_t> tail_{0};
     alignas(64) std::atomic<size_t> available_{0};
 
 public:
-    bool try_push_single_producer(const T &val)
-    {
-        auto h = head_.load(std::memory_order_relaxed);
-        if (h - tail_.load(std::memory_order_acquire) >= N)
-        {
-            return false;
-        }
-        slots_[h & (N - 1)] = val;
-        head_.store(h + 1, std::memory_order_release);
-        return true;
-    }
-    bool try_pop_single_consumer(T &val)
-    {
-        auto t = tail_.load(std::memory_order_relaxed);
-        if (t == head_.load(std::memory_order_acquire))
-            return false;
-        val = slots_[t & (N - 1)];
-        tail_.store(t + 1, std::memory_order_release);
-        return true;
-    }
-    bool try_push(const T &val)
+    // bool try_push_single_producer(const T &val)
+    // {
+    //     auto h = head_.load(std::memory_order_relaxed);
+    //     if (h - tail_.load(std::memory_order_acquire) >= N)
+    //     {
+    //         return false;
+    //     }
+    //     slots_[h & (N - 1)] = val;
+    //     head_.store(h + 1, std::memory_order_release);
+    //     return true;
+    // }
+    // bool try_pop_single_consumer(T &val)
+    // {
+    //     auto t = tail_.load(std::memory_order_relaxed);
+    //     if (t == head_.load(std::memory_order_acquire))
+    //         return false;
+    //     val = slots_[t & (N - 1)];
+    //     tail_.store(t + 1, std::memory_order_release);
+    //     return true;
+    // }
+    bool push(const T &val)
     {
         auto h = head_.load(std::memory_order_relaxed);
         do
@@ -136,8 +142,9 @@ public:
                 return false;
             }
         } while (!head_.compare_exchange_weak(h, h + 1, std::memory_order_acq_rel));
-        slots_[h & (N - 1)] = val;
-        published_[h & (N - 1)].store(h / N, std::memory_order_release);
+        auto &slot = slots_[h & (N - 1)];
+        slot.slot_ = val;
+        slot.published_.store(h / N, std::memory_order_release);
         available_.fetch_add(1, std::memory_order_release);
         return true;
     }
@@ -147,20 +154,21 @@ public:
         return available_.load(std::memory_order_acquire);
     }
 
-    bool try_pop(T &val)
-    {
-        auto t = tail_.load(std::memory_order_relaxed);
-        // 多消费者也要先CAS抢占读序列号，之后判断是否发布
-        if (published_[t & (N - 1)].load(std::memory_order_acquire) != t / N)
-            return false; // 还没发布
-        val = slots_[t & (N - 1)];
-        tail_.store(t + 1, std::memory_order_release);
-        return true;
-    }
+    // bool try_pop(T &val)
+    // {
+    //     auto t = tail_.load(std::memory_order_relaxed);
+    //     // 多消费者也要先CAS抢占读序列号，之后判断是否发布
+    //     if (published_[t & (N - 1)].load(std::memory_order_acquire) != t / N)
+    //         return false; // 还没发布
+    //     val = slots_[t & (N - 1)];
+    //     tail_.store(t + 1, std::memory_order_release);
+    //     return true;
+    // }
     bool pop(T &val)
     {
         auto t = tail_.load(std::memory_order_relaxed);
-        while (published_[t & (N - 1)].load(std::memory_order_acquire) != t / N)
+        auto &slot = slots_[t & (N - 1)];
+        while (slot.published_.load(std::memory_order_acquire) != t / N)
         {
             // 可选：如果队列空了就返回 false
             // if (t >= head_.load(std::memory_order_acquire))
@@ -169,7 +177,9 @@ public:
             // }
             std::this_thread::yield(); // 还没发布 每次让出 10-50 μs
         }
-        val = slots_[t & (N - 1)];
+        // Move out payload and clear the slot so owning types (e.g. shared_ptr)
+        // can release references immediately after pop.
+        val = std::move(slot.slot_);
         tail_.store(t + 1, std::memory_order_release);
         available_.fetch_sub(1, std::memory_order_release);
         return true;

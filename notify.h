@@ -19,8 +19,8 @@ public:
 
 private:
     std::mutex m_mutex;
+    bool m_hasNotify;
     std::condition_variable m_cv;
-    uint32_t m_pendingSignals;
     int32_t m_waitMs;
 };
 
