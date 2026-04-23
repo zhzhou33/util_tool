@@ -15,7 +15,7 @@ BEGIN_UTIL_NAMESPACE
 
 #define TIMESTEMPS 10
 
-class util_timer;
+class UtilTimer;
 
 class ThreadTimer
 {
@@ -25,7 +25,7 @@ public:
 
     void init();
 
-    uint32_t add_timer(uint32_t interval, uint32_t times, util_timer* who_is);
+    uint32_t add_timer(uint32_t interval, uint32_t times, UtilTimer* who_is);
     void remove_timer(uint32_t timer_id);
 
     void on_tick(uint32_t elapsed_ticks);

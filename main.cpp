@@ -18,7 +18,7 @@ void handle_user_event()
     test->func();
 }
 
-class customer_msg : public util_msg
+class customer_msg : public UtilMsg
 {
 public:
     virtual void on_message()
@@ -35,7 +35,6 @@ int main()
 {
     UTIL_LOG_INFO("hello " << "world");
 
-    // ======== 模仿 tp_util 的架构 ========
 
     // 1. 获取线程管理器和驱动
     ThreadMgr *mgr = ThreadMgr::get_instance();

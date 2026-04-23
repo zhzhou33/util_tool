@@ -11,7 +11,7 @@ USING_UTIL_NAMESPACE
 BEGIN_UTIL_NAMESPACE
 
 class Timer;
-class util_timer;
+class UtilTimer;
 
 class Timer
 {
@@ -19,7 +19,7 @@ public:
     Timer(int64_t when_ms,
           int64_t interval_ms,
           int32_t times,
-          class util_timer* who_is);
+          class UtilTimer* who_is);
 
     void run();
 
@@ -42,7 +42,7 @@ public:
 
 private:
     uint32_t m_id;
-    util_timer* m_who;
+    UtilTimer* m_who;
     int64_t m_whenMs;
     uint32_t m_intervalMs;
     bool m_repeated;

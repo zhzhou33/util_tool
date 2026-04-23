@@ -3,7 +3,7 @@
 #include "time_wheel.h"
 #include "timer.h"
 
-void Test::timer_work(const util_timer* who_is)
+void Test::timer_work(const UtilTimer* who_is)
 {
     auto time = get_now_time_stamp();
 

@@ -10,7 +10,7 @@
 #include <vector>
 #include "util.h"
 
-using MsgPtr = std::shared_ptr<util::util_msg>;
+using MsgPtr = std::shared_ptr<util::UtilMsg>;
 
 #define MSG_QUEUE_SIZE 128
 
@@ -112,26 +112,6 @@ class MPSC
     alignas(64) std::atomic<size_t> available_{0};
 
 public:
-    // bool try_push_single_producer(const T &val)
-    // {
-    //     auto h = head_.load(std::memory_order_relaxed);
-    //     if (h - tail_.load(std::memory_order_acquire) >= N)
-    //     {
-    //         return false;
-    //     }
-    //     slots_[h & (N - 1)] = val;
-    //     head_.store(h + 1, std::memory_order_release);
-    //     return true;
-    // }
-    // bool try_pop_single_consumer(T &val)
-    // {
-    //     auto t = tail_.load(std::memory_order_relaxed);
-    //     if (t == head_.load(std::memory_order_acquire))
-    //         return false;
-    //     val = slots_[t & (N - 1)];
-    //     tail_.store(t + 1, std::memory_order_release);
-    //     return true;
-    // }
     bool push(const T &val)
     {
         auto h = head_.load(std::memory_order_relaxed);
@@ -145,25 +125,15 @@ public:
         auto &slot = slots_[h & (N - 1)];
         slot.slot_ = val;
         slot.published_.store(h / N, std::memory_order_release);
-        available_.fetch_add(1, std::memory_order_release);
+        available_.fetch_add(1, std::memory_order_relaxed);
         return true;
     }
 
     size_t available() const
     {
-        return available_.load(std::memory_order_acquire);
+        return available_.load(std::memory_order_relaxed);
     }
 
-    // bool try_pop(T &val)
-    // {
-    //     auto t = tail_.load(std::memory_order_relaxed);
-    //     // 多消费者也要先CAS抢占读序列号，之后判断是否发布
-    //     if (published_[t & (N - 1)].load(std::memory_order_acquire) != t / N)
-    //         return false; // 还没发布
-    //     val = slots_[t & (N - 1)];
-    //     tail_.store(t + 1, std::memory_order_release);
-    //     return true;
-    // }
     bool pop(T &val)
     {
         auto t = tail_.load(std::memory_order_relaxed);
@@ -181,7 +151,7 @@ public:
         // can release references immediately after pop.
         val = std::move(slot.slot_);
         tail_.store(t + 1, std::memory_order_release);
-        available_.fetch_sub(1, std::memory_order_release);
+        available_.fetch_sub(1, std::memory_order_relaxed);
         return true;
     }
 };

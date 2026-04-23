@@ -26,7 +26,7 @@
 
 BEGIN_UTIL_NAMESPACE
 
-enum thread_type
+enum ThreadType
 {
     MAIN_THREAD = 0,
     IO_THREAD,
@@ -34,17 +34,17 @@ enum thread_type
 
 class ThreadMgrImpl;
 
-class UTIL_API util_msg
+class UTIL_API UtilMsg
 {
 public:
-    virtual ~util_msg() = default;
+    virtual ~UtilMsg() = default;
     virtual void on_message() = 0;
 };
 
 class UTIL_API IThreadWrapper
 {
 public:
-    virtual void post_msg(util_msg *data) = 0;
+    virtual void post_msg(UtilMsg *data) = 0;
 
     virtual void thread_run() = 0;
 };
@@ -58,7 +58,7 @@ public:
         return &instance;
     }
 
-    IThreadWrapper *create_thread(thread_type type = IO_THREAD);
+    IThreadWrapper *create_thread(ThreadType type = IO_THREAD);
     IThreadWrapper *get_main_thread();
     IThreadWrapper *current_thread();
 

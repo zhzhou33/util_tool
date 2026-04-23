@@ -58,7 +58,7 @@ TimeWheelPtr ThreadTimer::get_least_time_wheel()
 
 uint32_t ThreadTimer::add_timer(uint32_t interval,
                                 uint32_t times,
-                                util_timer *who_is)
+                                UtilTimer *who_is)
 {
     if (m_timeWheels.empty())
     {

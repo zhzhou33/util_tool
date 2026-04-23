@@ -12,7 +12,7 @@ ThreadMgr::~ThreadMgr()
     delete m_impl;
 }
 
-IThreadWrapper *ThreadMgr::create_thread(thread_type type)
+IThreadWrapper *ThreadMgr::create_thread(ThreadType type)
 {
     return m_impl->create_thread(type);
 }
@@ -45,7 +45,7 @@ ThreadMgrImpl::~ThreadMgrImpl()
     m_threads.clear();
 }
 
-ThreadWrapper *ThreadMgrImpl::create_thread(thread_type type)
+ThreadWrapper *ThreadMgrImpl::create_thread(ThreadType type)
 {
     return new ThreadWrapper(this, type);
 }

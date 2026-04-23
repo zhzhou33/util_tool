@@ -39,16 +39,16 @@ inline std::string stamp()
     return oss.str();
 }
 
-class Test : public util_timer_sink
+class Test : public UtilTimerSink
 {
 public:
     Test() {}
     ~Test() {}
-    virtual void timer_work(const util_timer* who_is);
+    virtual void timer_work(const UtilTimer* who_is);
 
     void func();
 
 private:
-    util_timer m_test_timer;
-    util_timer m_test2_timer;
+    UtilTimer m_test_timer;
+    UtilTimer m_test2_timer;
 };

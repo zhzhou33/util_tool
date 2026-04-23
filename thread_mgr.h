@@ -11,7 +11,7 @@ class TimerDriver;
 class ThreadMgrImpl
 {
 public:
-    ThreadWrapper *create_thread(thread_type type = IO_THREAD);
+    ThreadWrapper *create_thread(ThreadType type = IO_THREAD);
     ThreadWrapper *get_main_thread();
     ThreadWrapper *current_thread();
 

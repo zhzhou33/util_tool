@@ -12,7 +12,7 @@ thread_local ThreadWrapper *ThreadWrapper::t_current = nullptr;
 
 std::mutex ThreadWrapper::s_thrMutex;
 
-ThreadWrapper::ThreadWrapper(ThreadMgrImpl *threadMgr, thread_type type) :
+ThreadWrapper::ThreadWrapper(ThreadMgrImpl *threadMgr, ThreadType type) :
     m_thread(nullptr),
     m_threadMgr(threadMgr),
     m_type(type),
@@ -124,7 +124,7 @@ void ThreadWrapper::create_channel(ThreadWrapper *peer, size_t capacity)
     }
 }
 
-bool ThreadWrapper::post_msg(ThreadWrapper *target, util_msg *data)
+bool ThreadWrapper::post_msg(ThreadWrapper *target, UtilMsg *data)
 {
     // if (target == nullptr || data == nullptr)
     // {
@@ -135,7 +135,7 @@ bool ThreadWrapper::post_msg(ThreadWrapper *target, util_msg *data)
     // if (it != m_channels.end() && target->m_readEventQueue != nullptr)
     // {
     //     Channel ch = it->second;
-    //     bool ok = it->second.writeQueue->push(std::shared_ptr<util_msg>(data));
+    //     bool ok = it->second.writeQueue->push(std::shared_ptr<UtilMsg>(data));
     //     if (ok)
     //     {
     //         target->wakeup();
@@ -145,9 +145,9 @@ bool ThreadWrapper::post_msg(ThreadWrapper *target, util_msg *data)
     return false;
 }
 
-void ThreadWrapper::post_msg(util_msg *data)
+void ThreadWrapper::post_msg(UtilMsg *data)
 {
-    if (this->m_readEventQueue->push(std::shared_ptr<util_msg>(data)))
+    if (this->m_readEventQueue->push(std::shared_ptr<UtilMsg>(data)))
     {
         this->wakeup();
     }

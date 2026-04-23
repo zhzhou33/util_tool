@@ -8,6 +8,9 @@
 #include "util.h"
 #include "util_common.h"
 
+USING_UTIL_NAMESPACE
+BEGIN_UTIL_NAMESPACE
+
 #ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>
@@ -16,8 +19,6 @@
 #define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
 #endif
 
-USING_UTIL_NAMESPACE
-BEGIN_UTIL_NAMESPACE
 
 
 // 高精度等待定时器（需要 Windows 10 1803+ 或 Windows 11）
@@ -117,7 +118,9 @@ private:
     int64_t m_preTime;
     std::vector<ThreadWrapper *> *m_thrs;
     bool m_highResAvailable;
+#ifdef WIN32
     HighPrecisionWaitableTimer m_timer;
+#endif
 };
 
 END_UTIL_NAMESPACE

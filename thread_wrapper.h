@@ -35,17 +35,17 @@ struct Channel
 class ThreadWrapper : public IThreadWrapper
 {
 public:
-    ThreadWrapper(ThreadMgrImpl *threadMgr, thread_type type = IO_THREAD);
+    ThreadWrapper(ThreadMgrImpl *threadMgr, ThreadType type = IO_THREAD);
     ~ThreadWrapper();
 
     // 单次执行（主线程调用）
     void run_once();
 
     // 发送消息到目标线程（通过 SPSC 通道，无锁）
-    bool post_msg(ThreadWrapper *target, util_msg *data);
+    bool post_msg(ThreadWrapper *target, UtilMsg *data);
 
     // 发送消息（兼容旧接口，使用控制队列）
-    void post_msg(util_msg *data) override;
+    void post_msg(UtilMsg *data) override;
 
     void thread_run() override;
 
@@ -76,7 +76,7 @@ private:
     std::thread *m_thread;
     std::atomic<bool> m_running{true};
     ThreadMgrImpl *m_threadMgr;
-    thread_type m_type;
+    ThreadType m_type;
 
     // 与其他线程的通道（peer -> Channel）
     std::unordered_map<ThreadWrapper *, MPSC<MsgPtr, MSG_QUEUE_SIZE>*> m_channels;
