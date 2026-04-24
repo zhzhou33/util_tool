@@ -46,6 +46,7 @@ class UTIL_API IThreadWrapper
 public:
     virtual void post_msg(UtilMsg *data) = 0;
 
+    // main thread run once
     virtual void thread_run() = 0;
 };
 
@@ -61,8 +62,7 @@ public:
     IThreadWrapper *create_thread(ThreadType type = IO_THREAD);
     IThreadWrapper *get_main_thread();
     IThreadWrapper *current_thread();
-    void run_once();
-    bool start();
+    bool driver_loop();
     void stop();
 
 private:

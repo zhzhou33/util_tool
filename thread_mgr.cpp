@@ -29,14 +29,10 @@ IThreadWrapper *ThreadMgr::current_thread()
     return m_impl->current_thread();
 }
 
-void ThreadMgr::run_once()
-{
-    m_impl->run_once();
-}
 
-bool ThreadMgr::start()
+bool ThreadMgr::driver_loop()
 {
-    return m_impl->start();
+    return m_impl->driver_loop();
 }
 
 void ThreadMgr::stop()
@@ -78,15 +74,7 @@ ThreadWrapper *ThreadMgrImpl::current_thread()
     return ThreadWrapper::current();
 }
 
-void ThreadMgrImpl::run_once()
-{
-    if (m_mainThread != nullptr)
-    {
-        m_mainThread->thread_run();
-    }
-}
-
-bool ThreadMgrImpl::start()
+bool ThreadMgrImpl::driver_loop()
 {
     bool expected = false;
     if (!m_running.compare_exchange_strong(expected, true))
@@ -94,7 +82,7 @@ bool ThreadMgrImpl::start()
         return false;
     }
 
-    m_driverThread = new std::thread(&ThreadMgrImpl::driver_loop, this);
+    m_driverThread = new std::thread(&ThreadMgrImpl::loop_run, this);
     return true;
 }
 
@@ -125,7 +113,7 @@ void ThreadMgrImpl::stop()
     }
 }
 
-void ThreadMgrImpl::driver_loop()
+void ThreadMgrImpl::loop_run()
 {
     ThreadWrapper::set_current(m_mainThread);
     if (m_mainThread != nullptr)
@@ -135,6 +123,6 @@ void ThreadMgrImpl::driver_loop()
 
     while (m_running.load())
     {
-        run_once();
+        m_mainThread->thread_run();
     }
 }

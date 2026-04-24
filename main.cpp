@@ -55,7 +55,7 @@ int main()
     // }
 
     // 7. 由 util 内部线程驱动（适配无主循环项目）
-    mgr->start();
+    mgr->driver_loop();
     while (true) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
     return 0;

@@ -16,8 +16,7 @@ public:
     ThreadWrapper *create_thread(ThreadType type = IO_THREAD);
     ThreadWrapper *get_main_thread();
     ThreadWrapper *current_thread();
-    void run_once();
-    bool start();
+    bool driver_loop();
     void stop();
 
     TimerDriver *get_driver() { return m_driver; }
@@ -28,7 +27,7 @@ public:
     ~ThreadMgrImpl();
 
 private:
-    void driver_loop();
+    void loop_run();
 
 private:
     std::vector<ThreadWrapper *> m_threads;

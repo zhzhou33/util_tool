@@ -1,5 +1,6 @@
 #include "thread_wrapper.h"
 
+#include <cassert>
 #include <utility>
 
 #include "msg_queue.h"
@@ -172,6 +173,8 @@ void ThreadWrapper::wakeup()
 
 void ThreadWrapper::thread_run()
 {
+    assert(ThreadWrapper::current()->m_type == MAIN_THREAD);
+
     uint32_t ticks = m_threadMgr->get_driver()->run_once();
     this->run_once(ticks);
 }
