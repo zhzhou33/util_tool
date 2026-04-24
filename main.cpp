@@ -1,12 +1,10 @@
-#include <cstddef>
+#include <chrono>
 #include <string>
 #include <thread>
 
 #include "test.h"
-#include "thread_mgr.h"
 #include "thread_wrapper.h"
 #include "time_wheel.h"
-#include "timer_driver.h"
 #include "util.h"
 #include "util_common.h"
 
@@ -39,32 +37,26 @@ int main()
     // 1. 获取线程管理器和驱动
     ThreadMgr *mgr = ThreadMgr::get_instance();
 
-    // 2. 获取主线程
-    IThreadWrapper *main_thr = mgr->get_main_thread();
-
-    // 3. 创建 IO 线程
-    IThreadWrapper *io_thr = mgr->create_thread(IO_THREAD);
+    // 2. 创建 IO 线程
+    // IThreadWrapper *io_thr = mgr->create_thread(IO_THREAD);
 
     std::cout << "main thread id=" << std::this_thread::get_id() << std::endl;
 
     // 5. 添加定时器
     handle_user_event();
 
-    for (int i = 0; i < 20; i++)
-    {
-        // 6. 发送消息到 IO 线程（通过 SPSC 通道，无锁）
-        customer_msg *data = new customer_msg();
-        auto curTime = get_now_time_stamp();
-        data->data = std::to_string(curTime) + " hello from main (via SPSC channel)";
-        io_thr->post_msg(data); // 当前线程(main) -> io_thr
-    }
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     // 6. 发送消息到 IO 线程（通过 SPSC 通道，无锁）
+    //     customer_msg *data = new customer_msg();
+    //     auto curTime = get_now_time_stamp();
+    //     data->data = std::to_string(curTime) + " hello from main (via SPSC channel)";
+    //     io_thr->post_msg(data); // 当前线程(main) -> io_thr
+    // }
 
-    // 7. 主循环
-    while (true)
-    {
-        // 处理主线程消息
-        main_thr->thread_run();
-    }
+    // 7. 由 util 内部线程驱动（适配无主循环项目）
+    mgr->start();
+    while (true) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
     return 0;
 }

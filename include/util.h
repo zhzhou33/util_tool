@@ -61,6 +61,9 @@ public:
     IThreadWrapper *create_thread(ThreadType type = IO_THREAD);
     IThreadWrapper *get_main_thread();
     IThreadWrapper *current_thread();
+    void run_once();
+    bool start();
+    void stop();
 
 private:
     ThreadMgr();
