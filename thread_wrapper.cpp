@@ -84,16 +84,16 @@ void ThreadWrapper::thread_func()
     }
 }
 
-void ThreadWrapper::run_once()
+void ThreadWrapper::run_once(uint32_t ticks)
 {
-    process_messages(true);
+    process_messages(true, ticks);
 }
 
-void ThreadWrapper::process_messages(bool autoTick)
+void ThreadWrapper::process_messages(bool autoTick, uint32_t ticks)
 {
     if (autoTick)
     {
-        m_timer->on_tick(1);
+        m_timer->on_tick(ticks);
     }
     else
     {
@@ -172,6 +172,6 @@ void ThreadWrapper::wakeup()
 
 void ThreadWrapper::thread_run()
 {
-    m_threadMgr->get_driver()->run_once();
-    this->run_once();
+    uint32_t ticks = m_threadMgr->get_driver()->run_once();
+    this->run_once(ticks);
 }

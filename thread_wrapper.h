@@ -39,7 +39,7 @@ public:
     ~ThreadWrapper();
 
     // 单次执行（主线程调用）
-    void run_once();
+    void run_once(uint32_t ticks);
 
     // 发送消息到目标线程（通过 SPSC 通道，无锁）
     bool post_msg(ThreadWrapper *target, UtilMsg *data);
@@ -69,7 +69,7 @@ public:
     static void set_current(ThreadWrapper *wrapper) { t_current = wrapper; }
 
 private:
-    void process_messages(bool autoTick = false);
+    void process_messages(bool autoTick = false, uint32_t ticks = 0);
     void thread_func();
 
 private:

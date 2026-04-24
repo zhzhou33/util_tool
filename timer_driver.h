@@ -101,7 +101,7 @@ public:
     }
 
     // 在当前线程执行一次驱动（主线程调用）
-    void run_once();
+    uint32_t run_once();
 
     uint32_t get_step_ms() const { return m_steps; }
 
